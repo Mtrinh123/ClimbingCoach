@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+out/
+*.task
+*.mov
+*.MOV
+*.mp4
