@@ -13,14 +13,11 @@ Upload a climbing video and get technique feedback. Free, local pose detection t
    - **Hip height vs. feet:** a first step toward body-position feedback
 4. **Save the results:** annotated frames with the skeleton drawn on, plus a `report.json`.
 
-Everything runs on your own computer. No API keys, no cost, and videos never leave your machine.
-
 ## First results
 
 On a 35-second bouldering video filmed from behind:
 
 - The body was found in **65 of 70 frames (92%)**, and the skeleton lined up with the climber throughout the climb.
-- Found issues to fix next: frames after the climb (walking away, camera pointing at the ceiling) need to be ignored, and bent arms should only be flagged when the climber is holding still, not mid-move.
 
 ## Setup
 
@@ -52,12 +49,10 @@ Results go to `out/`:
 | `frame_000.jpg` … | Sampled frames with the skeleton drawn on. Elbow angles in red are bent arms |
 | `report.json` | Per-frame measurements and the times bent arms were found |
 
-**Tip:** film from behind or the side, with your whole body in the frame.
-
 ## Roadmap
 
 - [x] Pose tracking on climbing video
-- [ ] Ignore frames that aren't climbing
+- [x] Ignore frames that aren't climbing (uses which way the climber faces)
 - [ ] Flag bent arms only while holding still
 - [ ] More tips: feet not moving while reaching, hips far from the wall
 - [ ] Web app: React + TypeScript frontend with pose detection in the browser, ASP.NET Core (C#) API
