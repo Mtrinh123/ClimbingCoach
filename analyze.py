@@ -1,5 +1,4 @@
 import json
-import math
 import sys
 from pathlib import Path
 
@@ -8,44 +7,15 @@ import mediapipe as mp
 from mediapipe.tasks.python import BaseOptions
 from mediapipe.tasks.python.vision import PoseLandmarker, PoseLandmarkerOptions, RunningMode
 
+from coach import BENT_ARM, L_ELBOW, R_ELBOW, bent_arm, find_tips, measure
+
 HERE = Path(__file__).parent
 MODEL = HERE / "pose_landmarker_full.task"
 OUT = HERE / "out"
 
-L_SHOULDER, R_SHOULDER, L_ELBOW, R_ELBOW, L_WRIST, R_WRIST = 11, 12, 13, 14, 15, 16
-L_HIP, R_HIP, L_KNEE, R_KNEE, L_ANKLE, R_ANKLE = 23, 24, 25, 26, 27, 28
 BONES = [(11, 12), (11, 13), (13, 15), (12, 14), (14, 16), (11, 23), (12, 24), (23, 24),
          (23, 25), (25, 27), (24, 26), (26, 28)]
-
-BENT_ARM = 120      
 MIN_VISIBILITY = 0.5
-
-
-def angle(a, b, c):
-    ab = (a[0] - b[0], a[1] - b[1])
-    cb = (c[0] - b[0], c[1] - b[1])
-    dot = ab[0] * cb[0] + ab[1] * cb[1]
-    norm = math.hypot(*ab) * math.hypot(*cb)
-    return math.degrees(math.acos(max(-1, min(1, dot / norm)))) if norm else 0.0
-
-
-def measure(points, seen):
-    m = {}
-    for side, (s, e, w) in {"left": (L_SHOULDER, L_ELBOW, L_WRIST), "right": (R_SHOULDER, R_ELBOW, R_WRIST)}.items():
-        if seen[s] and seen[e] and seen[w]:
-            m[f"{side}_elbow"] = round(angle(points[s], points[e], points[w]))
-    if seen[L_SHOULDER] and seen[R_SHOULDER]:
-        m["facing_camera"] = points[L_SHOULDER][0] > points[R_SHOULDER][0]
-    if all(seen[i] for i in (L_HIP, R_HIP, L_ANKLE, R_ANKLE)):
-        hip_y = (points[L_HIP][1] + points[R_HIP][1]) / 2
-        feet_y = (points[L_ANKLE][1] + points[R_ANKLE][1]) / 2
-        m["hip_above_feet_px"] = round(feet_y - hip_y)
-        if seen[L_SHOULDER] and seen[R_SHOULDER]:
-            shoulder_y = (points[L_SHOULDER][1] + points[R_SHOULDER][1]) / 2
-            torso = hip_y - shoulder_y
-            if torso > 0:
-                m["legs_vs_torso"] = round((feet_y - hip_y) / torso, 2)
-    return m
 
 
 def main(video, fps=2.0):
@@ -75,17 +45,22 @@ def main(video, fps=2.0):
     climbing = [f for f in found if f["metrics"].get("facing_camera") is False]
     for f in frames:
         f["climbing"] = f in climbing
-    bent = [f for f in climbing if min(f["metrics"].get("left_elbow", 180), f["metrics"].get("right_elbow", 180)) < BENT_ARM]
+    bent = [f for f in climbing if bent_arm(f["metrics"])]
+    tips = find_tips(frames)
     report = {
         "frames_checked": len(frames),
         "body_found_in": len(found),
         "climbing_frames": len(climbing),
         "bent_arm_frames": [f["time_s"] for f in bent],
+        "tips": tips,
         "frames": frames,
     }
     (OUT / "report.json").write_text(json.dumps(report, indent=2))
     print(f"Checked {len(frames)} frames, body found in {len(found)} ({100 * len(found) // max(1, len(frames))}%), climbing in {len(climbing)}.")
     print(f"Bent-arm moments (elbow < {BENT_ARM} deg): {len(bent)} frames at {report['bent_arm_frames']} s")
+    print(f"Tips ({len(tips)}):")
+    for t in tips:
+        print(f"  {t['start_s']}-{t['end_s']}s  {t['message']}")
     print(f"Annotated frames and report.json are in {OUT}")
 
 
