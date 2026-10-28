@@ -18,6 +18,9 @@ Upload a climbing video and get technique feedback. Free, local pose detection t
    |---|---|
    | **Resting on bent arms** | Holding still for 1+ second with an elbow under 120°. Bent arms mid-move are fine |
    | **Feet low on a big reach** | A hand well above the shoulders while the legs are straight |
+   | **Hands overhead too long** | Both hands above the shoulders for 3+ seconds |
+   | **Feet off the wall** | Both hands high, legs straight, feet hanging together under the hips |
+   | **Long pause** | Holding still in any position for 3+ seconds 
 
 6. **Save the results:** annotated frames with the skeleton drawn on, plus a `report.json` with the tips.
 
@@ -27,7 +30,7 @@ On a 35-second bouldering video filmed from behind:
 
 - The body was found in **65 of 70 frames (92%)**, and the skeleton lined up with the climber throughout the climb.
 - **57 frames** were climbing; the walk away from the wall afterwards was skipped.
-- **2 tips**, both confirmed by watching the video: resting on a bent arm at 16–17s, and a big reach with straight legs at 24s.
+- **4 tips**, all confirmed by watching the video: both hands overhead at 8.5–14.5s, feet off the wall at 11.5s, resting on a bent arm at 16–17s, and a big reach with straight legs at 24s.
 
 ## Setup
 
@@ -79,7 +82,8 @@ python test_coach.py
 - [x] Ignore frames that aren't climbing (uses which way the climber faces)
 - [x] Flag bent arms only while holding still
 - [x] Tip: feet low on a big reach
-- [ ] More tips: hips far from the wall, foot placement
+- [x] Tips: hands overhead too long, feet off the wall, long pause
+- [ ] Side-on videos (needs a different way to tell climbing from standing)
 - [ ] Web app: React + TypeScript frontend with pose detection in the browser, ASP.NET Core (C#) API
 - [x] Tests and CI
 - [ ] Live demo
